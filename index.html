@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GK Quiz Exam</title>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ff9966, #ff5e62);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .quiz-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #ff5e62;
+    }
+    .question {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .options {
+      list-style-type: none;
+      padding: 0;
+    }
+    .options li {
+      margin: 10px 0;
+    }
+    .options button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #eee;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .options button:hover {
+      background-color: #ffd6cc;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 16px;
+      background-color: #ff5e62;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hide {
+      display: none;
+    }
+    .score {
+      text-align: center;
+      font-size: 22px;
+      color: #333;
+    }
+    #timer {
+      font-size: 18px;
+      color: red;
+      text-align: right;
+    }
+    input[type="email"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container" id="quiz">
+    <h1>General Knowledge Quiz</h1>
+    <div id="start-screen">
+      <input type="email" id="email" placeholder="Enter your email to start" required />
+      <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+    <div id="quiz-screen" class="hide">
+      <div id="timer">Time Left: <span id="time">15</span>s</div>
+      <div class="question" id="question"></div>
+      <ul class="options" id="options"></ul>
+    </div>
+    <div id="result-screen" class="hide">
+      <div class="score" id="score"></div>
+      <button class="btn" onclick="restartQuiz()">Try Again</button>
+    </div>
+  </div>
+  <script>
+    emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS Public Key
+    const questions = [
+      { question: "What is the capital of Nepal?", options: ["Kathmandu", "Pokhara", "Lalitpur", "Biratnagar"], answer: "Kathmandu" },
+      { question: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Venus"], answer: "Mars" },
+      { question: "Who wrote Nepal's national anthem?", options: ["Byakul Maila", "Laxmi Prasad", "Bhanubhakta", "Motiram"], answer: "Byakul Maila" },
+      { question: "Which gas do plants absorb?", options: ["Oxygen", "Carbon Dioxide", "Hydrogen", "Nitrogen"], answer: "Carbon Dioxide" },
+      { question: "Who invented the light bulb?", options: ["Nikola Tesla", "Einstein", "Edison", "Newton"], answer: "Edison" },
+      { question: "Longest river in the world?", options: ["Amazon", "Yangtze", "Mississippi", "Nile"], answer: "Nile" },
+      { question: "H2O is?", options: ["Salt", "Water", "Oxygen", "Hydrogen"], answer: "Water" },
+      { question: "First man on the moon?", options: ["Aldrin", "Gagarin", "Armstrong", "Collins"], answer: "Armstrong" },
+      { question: "National flower of Nepal?", options: ["Lily", "Sunflower", "Rhododendron", "Lotus"], answer: "Rhododendron" },
+      { question: "Where is Sahara Desert?", options: ["Asia", "Africa", "Australia", "South America"], answer: "Africa" },
+      { question: "Players in football team?", options: ["9", "10", "11", "12"], answer: "11" },
+      { question: "Hardest natural substance?", options: ["Gold", "Iron", "Diamond", "Quartz"], answer: "Diamond" },
+      { question: "Which organ purifies blood?", options: ["Lungs", "Heart", "Liver", "Kidney"], answer: "Kidney" },
+      { question: "Boiling point of water?", options: ["90°C", "100°C", "110°C", "120°C"], answer: "100°C" },
+      { question: "Largest ocean?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: "Pacific" },
+      { question: "Father of Computers?", options: ["Turing", "Jobs", "Babbage", "Gates"], answer: "Babbage" },
+      { question: "Ship of Desert?", options: ["Horse", "Camel", "Elephant", "Yak"], answer: "Camel" },
+      { question: "Full form of CPU?", options: ["Power Unit", "Control Unit", "Processing Unit", "Central Processing Unit"], answer: "Central Processing Unit" },
+      { question: "Currency of Japan?", options: ["Yuan", "Won", "Dollar", "Yen"], answer: "Yen" },
+      { question: "Sunlight gives which vitamin?", options: ["A", "B", "C", "D"], answer: "D" }
+    ];
+    let index = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 15;
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const quizScreen = document.getElementById("quiz-screen");
+    const startScreen = document.getElementById("start-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+
+    function startQuiz() {
+      const email = document.getElementById("email").value;
+      if (!email.includes("@")) {
+        alert("Please enter a valid email.");
+        return;
+      }
+      localStorage.setItem("quizEmail", email);
+      startScreen.classList.add("hide");
+      quizScreen.classList.remove("hide");
+      score = 0;
+      index = 0;
+      showQuestion();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 15;
+      timeEl.textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          selectAnswer(null);
+        }
+      }, 1000);
+    }
+
+    function showQuestion() {
+      const q = questions[index];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = "";
+      q.options.forEach(option => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => selectAnswer(option);
+        li.appendChild(btn);
+        optionsEl.appendChild(li);
+      });
+    }
+
+    function selectAnswer(selected) {
+      clearInterval(timer);
+      if (selected === questions[index].answer) score++;
+      index++;
+      if (index < questions.length) {
+        showQuestion();
+        startTimer();
+      } else {
+        endQuiz();
+      }
+    }
+
+    function endQuiz() {
+      quizScreen.classList.add("hide");
+      resultScreen.classList.remove("hide");
+      scoreEl.textContent = `You scored ${score} out of ${questions.length}`;
+      localStorage.setItem("lastScore", score);
+      sendEmail();
+    }
+
+    function restartQuiz() {
+      resultScreen.classList.add("hide");
+      startScreen.classList.remove("hide");
+    }
+
+    function sendEmail() {
+      const email = localStorage.getItem("quizEmail");
+      emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+        to_email: email,
+        message: `You scored ${score} out of ${questions.length} in the quiz.`,
+      }).then(() => {
+        console.log("Email sent successfully");
+      }).catch((error) => {
+        console.error("Email sending error:", error);
+      });
+    }
+  </script>
+</body>
+</html>
